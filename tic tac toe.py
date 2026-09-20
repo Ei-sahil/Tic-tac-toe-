@@ -6,6 +6,74 @@ global l1
 global b1
 global b2
 
+def computer_move():
+    empty_cells=[]
+
+    for row in range(3):
+        for column in range(3):
+            if buttons[row][column]['text']=="":
+                empty_cells.append((row,column))
+
+    # Try every empty cell
+    for row, column in empty_cells:
+        buttons[row][column]['text'] = players[1]
+
+        if check_winner_simulation() is True:
+            return row, column
+        buttons[row][column]['text'] = "" 
+
+
+    #Can human win?
+
+    for row, column in empty_cells:
+
+        buttons[row][column]['text'] = players[0]
+
+        if check_winner_simulation() is True:
+            buttons[row][column]['text'] = ""
+
+            return row, column
+        
+        buttons[row][column]['text'] = ""
+
+    #Taking corner
+    corners = [
+        (0, 0),
+        (0, 2),
+        (2, 0),
+        (2, 2)
+    ]
+
+    empty_corners = []
+
+    for row, column in corners:
+        if buttons[row][column]['text'] == "":
+            empty_corners.append((row, column))
+
+    if empty_corners:
+        return random.choice(empty_corners)
+
+    #Taking edges
+
+    edges = [
+        (0, 1),
+        (1, 0),
+        (1, 2),
+        (2, 1)
+    ]
+
+    empty_edges = []
+
+    for row, column in edges:
+        if buttons[row][column]['text'] == "":
+            empty_edges.append((row, column))
+
+    if empty_edges:
+        return random.choice(empty_edges)
+
+    return None
+
+
 def next_turn(row,column):
  global HC_player
  if mode=="HH":
@@ -31,45 +99,52 @@ def next_turn(row,column):
                  status_label.config(text="Tie!")
  else:
      if buttons[row][column]['text']=="" and check_winner() is False:
-          buttons[row][column]['text']=HC_player
-          if check_winner() is False:
-              HC_player=players[1] #move computer will move 
-              empty_cells = []
-              for row in range(3):
-                 for column in range(3):
-                     if buttons[row][column]['text'] == "":
-                         empty_cells.append((row, column))
-              if len(empty_cells)>0:
-                  win_move = None
-                  for win_row,win_column in empty_cells:
-                      
-                     buttons[win_row][win_column]['text']=HC_player
-                     
-                     if check_winner() is True:
-                         win_move=(win_row,win_column)
-                         buttons[win_row][win_column]['text']=""
-                         break
-                     else:
-                         buttons[win_row][win_column]['text']=""
-                  if win_move:
-                     win_row,win_column=win_move
-                  else:
-                     win_row,win_column=random.choice(empty_cells)
+        buttons[row][column]['text'] = HC_player   
 
-                  buttons[win_row][win_column]['text']=HC_player
-                  if check_winner() is True:
-                     status_label.config(text="Wanna play again!")
-                     return 
-                  HC_player=players[0]
-                  status_label.config(text="Your Turn bro")
-          elif check_winner() is True:
-             status_label.config(text="Nice bro")
-          elif check_winner()=="Tie":
-             status_label.config(text="Tie!")   
-                        
+        if check_winner() is False:
+
+                # Computer's turn
+                HC_player = players[1]
+
+                move = computer_move()
+
+                if move is not None:
+
+                    computer_row, computer_column = move
+
+                    buttons[computer_row][computer_column]['text'] = HC_player
+
+                    if check_winner() is True:
+                        status_label.config(text="Wanna play again!")
+                        return
+                    
+                    HC_player = players[0]
+                    status_label.config(text="Your Turn bro")
+
+        elif check_winner() is True:
+            status_label.config(text="Nice bro")
+
+        elif check_winner() == "Tie":
+            status_label.config(text="Tie!")  
              
      
- 
+def check_winner_simulation():
+
+    for row in range(3):
+        if buttons[row][0]['text'] == buttons[row][1]['text'] == buttons[row][2]['text'] != "":
+            return True
+
+    for column in range(3):
+        if buttons[0][column]['text'] == buttons[1][column]['text'] == buttons[2][column]['text'] != "":
+            return True
+
+    if buttons[0][0]['text'] == buttons[1][1]['text'] == buttons[2][2]['text'] != "":
+        return True
+
+    if buttons[0][2]['text'] == buttons[1][1]['text'] == buttons[2][0]['text'] != "":
+        return True
+
+    return False
 
 def check_winner():
   for row in range(3):
